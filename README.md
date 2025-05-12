@@ -19,18 +19,6 @@ A machine and deep learning-based application that identifies and flags hate spe
 - Flask / Streamlit *(if applicable)*
 - Jupyter Notebook (for model development and testing)
 
-## 📂 Project Structure
-
-hate-text-recognizer/
-├── data/ # Dataset(s) used for training and evaluation
-├── models/ # Trained model files
-├── notebooks/ # Jupyter Notebooks for data exploration & training
-├── src/ # Source code (preprocessing, training, prediction)
-├── app.py # Main app file (Flask/Streamlit)
-├── requirements.txt # Python dependencies
-├── README.md # Project documentation
-
-
 ## 📊 Dataset
 
 The model is trained on the [Hate Speech and Offensive Language Dataset](https://data.world/crowdflower/hate-speech-identification) or a similar publicly available corpus. The dataset includes labeled text samples categorized as:
