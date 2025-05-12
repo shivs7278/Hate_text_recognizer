@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hate Text Recognition </title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: 'Rajdhani', sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #3b82f6, #60a5fa);
+      overflow: hidden;
+      animation: fadeIn 1.2s ease-in;
+    }
+
+    .overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 30px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      padding: 50px 40px;
+      max-width: 650px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(14px);
+      animation: slideUp 1.2s ease-out;
+    }
+
+    h1 {
+      font-family: 'Times New Roman', serif;
+      font-size: 36px;
+      color: #ffffff;
+      margin-bottom: 30px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 18px;
+      font-size: 15px;
+      border-radius: 12px;
+      border: none;
+      resize: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      margin-bottom: 25px;
+      backdrop-filter: blur(5px);
+    }
+
+    textarea::placeholder {
+      color: #e0e0e0;
+    }
+
+    .submit-btn {
+      padding: 12px 22px;
+      border: none;
+      border-radius: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(to right, #e0f2fe, #c7d2fe);
+      color: #1e3a8a;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .submit-btn:hover {
+      transform: scale(1.06);
+      background: #f0f8ff;
+    }
+
+    .popup-alert {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 25px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 1000;
+      display: none;
+    }
+
+    .popup-alert.show {
+      display: block;
+      animation: slideDown 0.4s ease;
+    }
+
+    .recommendation {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(239, 68, 68, 0.9);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: bold;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+      animation: slideUp 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="container">
+      <h1>Hate Text Recognition </h1>
+      <textarea id="inputText" placeholder="Type or paste text here..."></textarea>
+      <button class="submit-btn" id="analyzeBtn">Analyze</button>
+      <div id="result" class="result"></div>
+    </div>
+  </div>
+
+  <div id="hatePopup" class="popup-alert" style="background: rgba(239, 68, 68, 0.9);">⚠️ Hate Speech Detected</div>
+  <div id="noHatePopup" class="popup-alert" style="background: rgba(34, 197, 94, 0.9);">✅ No Hate Speech Detected</div>
+  <div id="recommendation" class="recommendation">🚫 Consider reporting or blocking the user!</div>
+
+  <script>
+    let hateWords = [];
+
+    async function loadHateWords() {
+      try {
+        const response = await fetch('Hateword.csv');
+        const csvText = await response.text();
+
+        hateWords = csvText
+          .split('\n')
+          .slice(1)
+          .map(word => word.trim().toLowerCase())
+          .filter(word => word);
+
+        console.log("Hate words loaded:", hateWords);
+      } catch (error) {
+        console.error("Error loading hate words:", error);
+      }
+    }
+
+    function detectHate(text) {
+      const lowerText = text.toLowerCase();
+      return hateWords.some(word => lowerText.includes(word));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadHateWords();
+
+      const analyzeBtn = document.getElementById("analyzeBtn");
+      const textarea = document.getElementById("inputText");
+      const resultElem = document.getElementById("result");
+      const hatePopup = document.getElementById("hatePopup");
+      const noHatePopup = document.getElementById("noHatePopup");
+      const recommendation = document.getElementById("recommendation");
+
+      analyzeBtn.addEventListener("click", () => {
+        const input = textarea.value.trim();
+
+        hatePopup.classList.remove("show");
+        noHatePopup.classList.remove("show");
+        recommendation.style.display = "none";
+
+        if (!input) {
+          resultElem.textContent = "Please enter some text.";
+          resultElem.className = "";
+          return;
+        }
+
+        const isHate = detectHate(input);
+
+        if (isHate) {
+          resultElem.textContent = "⚠️ Hate Speech Detected";
+          resultElem.className = "hate result";
+          hatePopup.classList.add("show");
+          recommendation.style.display = "block";
+          setTimeout(() => {
+            hatePopup.classList.remove("show");
+            recommendation.style.display = "none";
+          }, 4000);
+        } else {
+          resultElem.textContent = "✅ No Hate Speech Detected";
+          resultElem.className = "not-hate result";
+          noHatePopup.classList.add("show");
+          setTimeout(() => noHatePopup.classList.remove("show"), 3000);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
